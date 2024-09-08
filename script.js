@@ -1,10 +1,37 @@
 const apikey = "50e1f073839543c0ae9e64e4e37812cf";
 
 const blogContainer = document.getElementById("blog-container");
+const searchField = document.getElementById("search-input");
+const searchButton = document.getElementById("search-button");
 
 async function fetchRandomNews() {
   try {
     const apiUrl = `https://newsapi.org/v2/top-headlines?country=us&pageSize=10&apikey=${apikey}`;
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    console.log(data);
+    return data.articles;
+  } catch (error) {
+    console.error("Error fetching random news", error);
+    return [];
+  }
+}
+
+searchButton.addEventListener("click", async () => {
+  const query = searchField.value.trim();
+  if (query !== "") {
+    try {
+      const articles = await fetchNewsQuery(query);
+      displayBlogs(articles);
+    } catch (error) {
+      console.log("Error fetching news by query", error);
+    }
+  }
+});
+
+async function fetchNewsQuery(query) {
+  try {
+    const apiUrl = `https://newsapi.org/v2/everything?q=${query}&pageSize=10&apikey=${apikey}`;
     const response = await fetch(apiUrl);
     const data = await response.json();
     console.log(data);
@@ -32,15 +59,27 @@ function displayBlogs(articles) {
       const title = document.createElement("h2");
       title.textContent = article.title || "Untitled";
 
+      const truncatedTitle =
+        article.title.length > 30
+          ? article.title.slice(0, 30) + ". . . ."
+          : article.title;
+      title.textContent = truncatedTitle;
+
       const description = document.createElement("p");
-      description.textContent =
-        article.description || "No description available";
+      const truncatedDes =
+        article.description.length > 120
+          ? article.description.slice(0, 120) + ". . . ."
+          : article.description;
+      description.textContent = truncatedDes;
+      article.description || "No description available";
 
       // Append the elements to the blog card
       blogCard.appendChild(img);
       blogCard.appendChild(title);
       blogCard.appendChild(description);
-
+      blogCard.addEventListener("click", () => {
+        window.open(article.url, "_blank");
+      });
       // Append the blog card to the container
       blogContainer.appendChild(blogCard);
     });
@@ -48,7 +87,6 @@ function displayBlogs(articles) {
     console.error("No valid articles to display.");
   }
 }
-
 
 (async () => {
   try {
